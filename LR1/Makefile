@@ -31,7 +31,7 @@ task5_SRCS = src/main_task5.c src/task5.c
 task5_LDFLAGS =
 
 # Task 6 (нужен -lm)
-task6_SRCS = src/main_task6.c src/task6.c
+task6_SRCS = src/main_task6.c src/task6.c src/parse.c
 task6_LDFLAGS = -lm
 
 # Task 7
@@ -40,7 +40,7 @@ task7_LDFLAGS =
 
 # Task 8
 task8_SRCS = src/main_task8.c src/task8.c src/base_utils.c
-task8_OBJS = $(task8_SRCS:.c=.o)
+task8_LDFLAGS =
 
 # ===== Derive object lists =====
 task1_OBJS = $(task1_SRCS:.c=.o)
@@ -65,7 +65,7 @@ src/%.o: src/%.c
 
 # ===== Link rules per task =====
 task1: $(task1_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) $(task1_LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task1_LDFLAGS)
 
 task2: $(task2_OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task2_LDFLAGS)
@@ -77,16 +77,16 @@ task4: $(task4_OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task4_LDFLAGS)
 
 task5: $(task5_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) $(task5_LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task5_LDFLAGS)
 
 task6: $(task6_OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task6_LDFLAGS)
 
 task7: $(task7_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) $(task7_LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task7_LDFLAGS)
 
 task8: $(task8_OBJS)
-	$(CC) $(CFLAGS) -Iinclude -o $@ $^
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(task8_LDFLAGS)
 
 # ===== Helpers =====
 .PHONY: clean

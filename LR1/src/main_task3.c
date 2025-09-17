@@ -3,6 +3,23 @@
 #include <inttypes.h>
 #include "common.h"
 #include "task3.h"
+#include <ctype.h>
+
+static int str_ieq(const char* a, const char* b) {
+    while (*a && *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) return 0;
+        ++a; ++b;
+    }
+    return *a == '\0' && *b == '\0';
+}
+
+static int flag_is(const char* s, const char* one_letter) {
+    if (!s || !*s) return 0;
+    if (s[0] != '-' && s[0] != '/') return 0;
+    ++s;
+    if (*s == '-') ++s;
+    return s[0] && !s[1] && tolower((unsigned char)s[0]) == tolower((unsigned char)one_letter[0]);
+}
 
 static void print_usage(const char *prog) {
     fprintf(stderr,
@@ -17,8 +34,8 @@ int main(int argc, char **argv) {
     if (argc < 2) { print_usage(argv[0]); return ST_ERR_ARGS; }
     
     const char *flag = argv[1];
-    
-    if (strcmp(flag, "-q") == 0) {
+
+    if (flag_is(flag, "q")) {
         if (argc != 6) { print_usage(argv[0]); return ST_ERR_ARGS; }
         double eps, a, b, c;
         if (sscanf(argv[2], "%lf", &eps) != 1 ||
@@ -29,7 +46,7 @@ int main(int argc, char **argv) {
         }
         return task3_q_solve_quad(eps, a, b, c);
     }
-    else if (strcmp(flag, "-m") == 0) {
+    else if (flag_is(flag, "m")) {
         if (argc != 4) { print_usage(argv[0]); return ST_ERR_ARGS; }
         int64_t a, b;
         if (parse_int64(argv[2], &a) != ST_OK ||
@@ -38,7 +55,7 @@ int main(int argc, char **argv) {
         }
         return task3_m_is_multiple(a, b);
     }
-    else if (strcmp(flag, "-t") == 0) {
+    else if (flag_is(flag, "t")) {
         if (argc != 6) { print_usage(argv[0]); return ST_ERR_ARGS; }
         double eps, a, b, c;
         if (sscanf(argv[2], "%lf", &eps) != 1 ||

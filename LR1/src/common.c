@@ -3,35 +3,64 @@
 #include <limits.h>
 #include <stdlib.h>
 #include "common.h"
+#include <stdint.h>
+
+static const char* skip_spaces(const char* s){
+    while (s && *s && isspace((unsigned char)*s)) ++s;
+    return s;
+}
+
+/* Считает «префикс знаков»: +++--+-42 → знак=минус (3 минуса → нечётно) и возвращает позицию после знаков */
+static const char* eat_sign_run(const char* s, int* sign_out){
+    int minus = 0;
+    int any = 0;
+    while (*s == '+' || *s == '-') { if (*s=='-') ++minus; ++s; any=1; }
+    if (sign_out) *sign_out = (minus % 2 == 0) ? +1 : -1;
+    return s;
+}
 
 status_t parse_int64(const char *s, int64_t *out) {
     if (!s || !out) return ST_ERR_ARGS;
+
     const char *p = s;
+
+    // 1) пропустить ведущие пробелы
     while (isspace((unsigned char)*p)) ++p;
-    int sign = 1;
-    if (*p == '+') { ++p; }
-    else if (*p == '-') { sign = -1; ++p; }
+
+    // 2) собрать последовательность знаков
+    int neg = 0; // 0 -> +, 1 -> -
+    int saw_sign = 0;
+    while (*p == '+' || *p == '-') {
+        saw_sign = 1;
+        if (*p == '-') neg ^= 1; // меняем чётность минусов
+        ++p;
+    }
+
+    // 3) обязателен хотя бы один десятичный символ
     if (!isdigit((unsigned char)*p)) return ST_ERR_PARSE;
 
+    // 4) парс цифр с проверкой переполнения
     int64_t val = 0;
     for (; *p; ++p) {
         if (isspace((unsigned char)*p)) {
-            const char *q = p;
-            while (isspace((unsigned char)*q)) ++q;
-            if (*q != '\0') return ST_ERR_PARSE;
+            // допускаем только хвостовые пробелы
+            while (isspace((unsigned char)*p)) ++p;
+            if (*p != '\0') return ST_ERR_PARSE;
             break;
         }
         if (!isdigit((unsigned char)*p)) return ST_ERR_PARSE;
         int d = *p - '0';
-        if (sign == 1) {
+        if (!neg) {
             if (val > (INT64_MAX - d) / 10) return ST_ERR_OVERFLOW;
             val = val * 10 + d;
         } else {
-            if (-val < (INT64_MIN + d) / 10) return ST_ERR_OVERFLOW;
-            val = val * 10 + d;
+            // для отрицательных бережём нижнюю границу
+            if (val < (INT64_MIN + d) / 10) return ST_ERR_OVERFLOW;
+            val = val * 10 - d; // накапливаем сразу со знаком
         }
     }
-    *out = (sign == 1) ? val : -val;
+
+    *out = val;
     return ST_OK;
 }
 

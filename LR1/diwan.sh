@@ -44,7 +44,7 @@ case "$cmd" in
         echo ">>> Running tests..."
         if [ -x ./run_tests.sh ]; then
             echo ">>> Found run_tests.sh — using it"
-            ./run_tests.sh
+            ./run_tests.sh "$@"
             exit $?
         fi
         for f in test/*.in; do

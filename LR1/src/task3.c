@@ -37,27 +37,28 @@ status_t task3_m_is_multiple(int64_t a, int64_t b) {
     return ST_OK;
 }
 
-status_t task3_t_is_right_triangle(double eps, double a, double b, double c) {
-    if (a <= eps || b <= eps || c <= eps) {
-        fprintf(stdout, "Не треугольник (сторона <= 0)\n");
-        return ST_ERR_RANGE;
+status_t task3_t_is_right_triangle(double eps, double x, double y, double z) {
+    // eps должен быть строго > 0
+    if (!(eps > 0)) return ST_ERR_RANGE;
+
+    // стороны тоже строго положительные
+    if (!(x > 0 && y > 0 && z > 0)) return ST_ERR_RANGE;
+
+    // далее как было...
+    double a = x, b = y, c = z;
+    if (a > b) { double t=a; a=b; b=t; }
+    if (b > c) { double t=b; b=c; c=t; }
+    if (a > b) { double t=a; a=b; b=t; }
+
+    // проверка существования треугольника: c < a + b (с допуском)
+    if (!flt(c, a + b, eps)) {
+        printf("не треугольник\n");
+        return ST_OK;
     }
-    double sides[3] = {a, b, c};
-    for (int i = 0; i < 2; i++) {
-        for (int j = i + 1; j < 3; j++) {
-            if (sides[i] < sides[j]) {
-                double temp = sides[i];
-                sides[i] = sides[j];
-                sides[j] = temp;
-            }
-        }
-    }
-    double c_sq = sides[0] * sides[0];
-    double sum_sq = sides[1] * sides[1] + sides[2] * sides[2];
-    if (feq(c_sq, sum_sq, eps)) {
-        fprintf(stdout, "Прямоугольный треугольник\n");
-    } else {
-        fprintf(stdout, "Не прямоугольный треугольник\n");
-    }
+
+    double lhs = a*a + b*b;
+    double rhs = c*c;
+    if (feq(lhs, rhs, eps)) printf("прямоугольный\n");
+    else printf("не прямоугольный\n");
     return ST_OK;
 }

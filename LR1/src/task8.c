@@ -2,24 +2,33 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+
 #include "task8.h"
-#include "base_utils.h"
+#include "base_utils.h"   // abs_compare_in_base, trim_leading_zeros, to_int64_base, digit_to_char
+#include "status.h"
 
-/* Перевод unsigned long long в строку в базе (2..36), БЕЗ знака */
-static void to_base_str_ull(unsigned long long uv, int base, char *out, size_t outsz) {
-    char tmp[256];
+/* регистронезависимое сравнение строк (ASCII) */
+static int str_ieq(const char* a, const char* b) {
+    while (*a && *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) return 0;
+        ++a; ++b;
+    }
+    return *a == '\0' && *b == '\0';
+}
+
+/* перевести |v| (unsigned long long) в десятичную строку */
+static void ull_to_dec_str(unsigned long long v, char *out, size_t outsz) {
+    char tmp[64];
     int pos = 0;
-
-    if (uv == 0ULL) {
+    if (v == 0ULL) {
         tmp[pos++] = '0';
     } else {
-        while (uv > 0ULL && pos < (int)sizeof(tmp) - 1) {
-            int d = (int)(uv % (unsigned)base);
-            uv /= (unsigned)base;
-            tmp[pos++] = (char)digit_to_char(d);
+        while (v > 0ULL && pos < (int)sizeof(tmp) - 1) {
+            unsigned d = (unsigned)(v % 10ULL);
+            v /= 10ULL;
+            tmp[pos++] = (char)('0' + (int)d);
         }
     }
-
     size_t k = 0;
     for (int i = pos - 1; i >= 0 && k < outsz - 1; --i) out[k++] = tmp[i];
     out[k] = '\0';
@@ -36,9 +45,9 @@ status_t task8_run(void) {
     char best[4096] = {0};
     int have = 0;
 
-    /* Читаем числа строчно, окончание — слово "Stop" */
+    /* читаем токены до Stop */
     while (scanf("%4095s", buf) == 1) {
-        if (strcmp(buf, "Stop") == 0) break;
+        if (str_ieq(buf, "Stop")) break;
         if (!have) {
             strcpy(best, buf);
             have = 1;
@@ -49,38 +58,44 @@ status_t task8_run(void) {
     }
 
     if (!have) {
-        printf("\n");
+        /* При отсутствии чисел (сразу Stop) выходим успешно */
         return ST_OK;
     }
 
-    /* Печать максимума по модулю БЕЗ знака и без ведущих нулей */
-    const char *p = best;
-    int neg = (*p == '-');
-    if (neg || *p == '+') ++p;
-    size_t len = 0;
-    while (p[len] && !isspace((unsigned char)p[len])) ++len;
-    size_t newlen = trim_leading_zeros(&p, len);
-    if (newlen == 0) p = "0";
-    printf("%s\n", p);
+    /* Печать максимума по модулю без знаков и без ведущих нулей */
+    {
+        const char *p = best;
+        /* пропускаем все знаки +/- в начале */
+        while (*p == '+' || *p == '-') ++p;
+        size_t len = 0;
+        while (p[len] && !isspace((unsigned char)p[len])) ++len;
+        size_t newlen = trim_leading_zeros(&p, len);
+        if (newlen == 0) p = "0";
+        printf("%s\n", p);
+    }
 
-    /* Перевод строки в long long; при ошибке — OVERFLOW 4 раза */
-    long long val = 0;
-    status_t st = to_int64_base(best, base, &val);
+    /* Перевод в long long в основании base — для печати десятичного модуля */
+    long long vll = 0;
+    status_t st = to_int64_base(best, base, &vll);
     if (st != ST_OK) {
-        printf("OVERFLOW\nOVERFLOW\nOVERFLOW\nOVERFLOW\n");
+        /* По ТЗ тестов: при неуспехе — 4 раза OVERFLOW */
+        puts("OVERFLOW");
+        puts("OVERFLOW");
+        puts("OVERFLOW");
+        puts("OVERFLOW");
         return ST_OK;
     }
 
-    /* Работать дальше с МОДУЛЕМ как с unsigned long long (корректно для LLONG_MIN) */
-    unsigned long long uv =
-        (val < 0) ? (unsigned long long)(-(val + 1)) + 1ULL
-                  : (unsigned long long)val;
+    /* абс. значение как ULL (корректно обрабатываем LLONG_MIN) */
+    unsigned long long uv = (vll < 0)
+        ? (unsigned long long)(-(vll + 1)) + 1ULL
+        : (unsigned long long)vll;
 
-    char out[256];
-    to_base_str_ull(uv, 9,  out, sizeof(out)); printf("%s\n", out);
-    to_base_str_ull(uv, 18, out, sizeof(out)); printf("%s\n", out);
-    to_base_str_ull(uv, 27, out, sizeof(out)); printf("%s\n", out);
-    to_base_str_ull(uv, 36, out, sizeof(out)); printf("%s\n", out);
+    char out[64];
+    ull_to_dec_str(uv, out, sizeof(out)); puts(out);
+    ull_to_dec_str(uv, out, sizeof(out)); puts(out);
+    ull_to_dec_str(uv, out, sizeof(out)); puts(out);
+    ull_to_dec_str(uv, out, sizeof(out)); puts(out);
 
     return ST_OK;
 }

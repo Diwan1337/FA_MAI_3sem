@@ -13,12 +13,12 @@ status_t task5_run(const char *flag, const char *in_path, const char *out_path_o
     if (!flag || !in_path) return ST_ERR_ARGS;
     char op=0; 
     int named=0; // named output?
-    if ((flag[0]=='-'||flag[0]=='/') && flag[1]=='n'){ 
+    if ((flag[0]=='-'||flag[0]=='/') && tolower((unsigned char)flag[1])=='n'){ 
         named=1; 
-        op=flag[2]; 
+        op=(char)tolower((unsigned char)flag[2]); 
     }
     else if (flag[0]=='-'||flag[0]=='/'){ 
-        op=flag[1]; 
+        op=(char)tolower((unsigned char)flag[1]); 
     }
     else return ST_ERR_ARGS;
 
