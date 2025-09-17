@@ -11,7 +11,6 @@
 .
 ├── include/         # Заголовочные файлы (.h)
 ├── src/             # Исходники (.c)
-├── test/            # Тестовые данные (input/output)
 ├── Makefile         # Сборка всех заданий
 ├── diwan.sh         # Универсальный хелпер
 └── run_tests.sh     # Автотесты (опционально)
@@ -90,7 +89,9 @@
 Можно написать свой сценарий (bash) и положить как `run_tests.sh`.  
 Тогда `diwan.sh` сам его вызовет:
 ```bash
-./diwan.sh test
+./diwan.sh test        # полные тесты (по умолчанию full)
+./diwan.sh test fast   # быстрые smoke-тесты
+./diwan.sh test diag   # диагностический режим (печатает RC/out/err)
 ```
 Вывод:
 ```
